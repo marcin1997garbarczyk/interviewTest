@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 
+from app.prompts.prompt_manager import PromptManager
 from app.schemas.chat import MessagePayload
 from app.tools.agent_tools import analyze_data, propose_action
 
@@ -24,8 +25,7 @@ class LLMService:
             [
                 (
                     "system",
-                    "You are a modular AI agent. Use tools when relevant. "
-                    "If user asks for an operation that needs approval, call propose_action tool.",
+                    PromptManager.get_agent_system_prompt(),
                 ),
                 MessagesPlaceholder(variable_name="chat_history"),
                 ("human", "{input}"),
@@ -51,29 +51,32 @@ class LLMService:
     def process_message(self, session_id: str, user_message: str, history: list[MessagePayload]) -> dict:
         if self._agent_executor is None:
             normalized_message = user_message.lower()
-            if "approve" in normalized_message or "action" in normalized_message:
+            trigger_keywords = PromptManager.get_mock_action_trigger_keywords()
+            if any(keyword in normalized_message for keyword in trigger_keywords):
+                action_type = PromptManager.get_mock_propose_action_type()
+                action_details = PromptManager.get_mock_propose_action_details()
                 proposed_action = propose_action.invoke(
                     {
-                        "action_type": "credit_memo",
-                        "details": {"reason": "detected anomaly from uploaded data"},
+                        "action_type": action_type,
+                        "details": action_details,
                     }
                 )
                 return {
-                    "response": "I prepared an action proposal that needs your approval.",
+                    "response": PromptManager.get_mock_pending_action_response(),
                     "tool_outputs": [
                         {
                             "tool_name": "propose_action",
                             "tool_input": {
-                                "action_type": "credit_memo",
-                                "details": {"reason": "detected anomaly from uploaded data"},
+                                "action_type": action_type,
+                                "details": action_details,
                             },
                             "tool_output": proposed_action,
                         }
                     ],
                 }
-            fallback_response = (
-                "Agent is running in mock mode because OPENAI_API_KEY is not set. "
-                f"Session {session_id} received: {user_message}"
+            fallback_response = PromptManager.format_mock_no_api_key_response(
+                session_id=session_id,
+                user_message=user_message,
             )
             return {"response": fallback_response, "tool_outputs": []}
 

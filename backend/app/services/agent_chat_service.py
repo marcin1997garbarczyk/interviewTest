@@ -1,3 +1,4 @@
+from app.prompts.prompt_manager import PromptManager
 from app.schemas.approval import ApproveActionResponse
 from app.schemas.chat import ChatResponse, ConversationHistoryResponse, MessagePayload
 from app.services.chat_message_service import ChatMessageService
@@ -45,7 +46,10 @@ class AgentChatService:
             MessagePayload(
                 session_id=session_id,
                 role="system",
-                content=f"Action {action.action_type} was {action.status.lower()} by human.",
+                content=PromptManager.format_action_decision_system_message(
+                    action_type=action.action_type,
+                    status=action.status.lower(),
+                ),
                 metadata={"action_id": action.action_id, "decision": decision},
             )
         )
@@ -75,7 +79,9 @@ class AgentChatService:
                 MessagePayload(
                     session_id=session_id,
                     role="system",
-                    content=f"Action {action.action_type} requires approval.",
+                    content=PromptManager.format_pending_action_system_message(
+                        action_type=action.action_type
+                    ),
                     metadata={"pending_action": pending_action},
                 )
             )
