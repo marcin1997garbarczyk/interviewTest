@@ -1,0 +1,802 @@
+---
+alwaysApply: true
+---
+# GaudiAI Project Rules for Cursor
+
+**IMPORTANT**: Always attach this `.cursorrules` file to every prompt when working on this project to ensure proper context and adherence to project standards.
+
+## Project Overview
+GaudiAI is an intelligent knowledge management and AI chat system built with modern web technologies. It features advanced security, internationalization, and scalable architecture with AI-powered conversations, knowledge management, and vector search capabilities.
+
+## Architecture Overview
+- **Backend**: FastAPI with async SQLAlchemy, PostgreSQL + pgvector, Celery + Redis
+- **Frontend**: Vue 3 with Composition API, Vite, Vue Router, Vue I18n
+- **Database**: PostgreSQL with pgvector extension for semantic search
+- **Authentication**: JWT with token blacklisting, Google SSO integration
+- **Background Tasks**: Celery with Redis broker
+- **Containerization**: Docker & Docker Compose
+- **Languages**: English (en) and Polish (pl) with dynamic switching
+
+## Directory Structure Rules
+
+### Backend Structure (`backend/`)
+```
+backend/
+├── app/
+│   ├── api/routes/          # API endpoint definitions
+│   ├── auth/               # Authentication dependencies
+│   ├── core/               # Configuration and settings
+│   ├── database/           # Database models, CRUD, schemas
+│   │   ├── {model_name}/   # Each model has its own directory
+│   │   │   ├── models.py   # SQLAlchemy models
+│   │   │   ├── schemas.py  # Pydantic schemas
+│   │   │   └── crud.py     # CRUD operations
+│   ├── middleware/         # Custom middleware
+│   ├── services/          # Business logic services
+│   ├── tasks/             # Celery background tasks
+│   └── utils/             # Utilities and helpers
+├── alembic/               # Database migrations
+└── requirements.txt       # Python dependencies
+```
+
+### Frontend Structure (`frontend/`)
+```
+frontend/
+├── src/
+│   ├── components/        # Vue components
+│   ├── composables/       # Vue composables
+│   ├── i18n/             # Internationalization
+│   │   └── locales/      # Translation files (en.js, pl.js)
+│   ├── router/           # Vue router configuration
+│   ├── config/           # Configuration files
+│   └── utils/            # Utility functions
+├── public/               # Static assets
+└── package.json          # Node.js dependencies
+```
+
+## Core Principles
+
+### SOLID Principles
+- **S - Single Responsibility**: Each class/function/component should have one reason to change
+- **O - Open/Closed**: Open for extension, closed for modification
+- **L - Liskov Substitution**: Derived classes must be substitutable for their base classes
+- **I - Interface Segregation**: Many specific interfaces are better than one general interface
+- **D - Dependency Inversion**: Depend on abstractions, not concretions
+
+### DRY (Don't Repeat Yourself)
+- **NEVER duplicate code**: Extract common logic into reusable functions, components, or composables
+- **Create reusable components**: If you write similar code twice, create a component
+- **Use composables**: Extract shared logic into composables (frontend) or utilities (backend)
+- **Centralize business logic**: Put business rules in services, not scattered across routes
+
+## Coding Standards
+
+### Backend (Python/FastAPI)
+- **Framework**: Use FastAPI with async/await patterns
+- **Database**: Use async SQLAlchemy with PostgreSQL + pgvector
+- **Models**: Follow the pattern: `models.py` (SQLAlchemy), `schemas.py` (Pydantic), `crud.py` (operations)
+- **Authentication**: JWT tokens with blacklisting support
+- **Validation**: Use Pydantic models for all data validation
+- **Error Handling**: Use structured logging with proper exception handling
+- **Configuration**: Use Pydantic Settings with environment variable mapping
+- **Background Tasks**: Use Celery for long-running operations
+- **Rate Limiting**: Implement SlowAPI for API protection
+- **CORS**: Dynamic CORS configuration based on environment
+- **Comments**: **STRICTLY AVOID comments** - Write self-describing code with clear naming. Only add comments for extremely complex business logic that cannot be expressed clearly in code.
+- **Development Pattern**: For new endpoints, always follow: Route → Service → CRUD pattern
+- **Separation of Concerns**:
+  - **Routes**: ONLY handle HTTP requests/responses, input validation, and call services. NO business logic.
+  - **Services**: ALL business logic goes here. Orchestrate CRUD operations, handle validations, business rules.
+  - **CRUD**: ONLY database operations (Create, Read, Update, Delete). NO business logic, NO validations beyond data access.
+
+### Frontend (Vue 3)
+- **Framework**: Vue 3 with Composition API
+- **Build Tool**: Vite for development and building
+- **Routing**: Vue Router with guards
+- **State Management**: Use composables for state management
+- **HTTP Client**: Axios with interceptors
+- **Internationalization**: Vue I18n with dynamic language switching
+- **Styling**: Use CSS modules or scoped styles
+- **Components**: Single-file components (.vue) with proper structure
+- **Comments**: **STRICTLY AVOID comments** - Write self-describing code with clear naming. Only add comments for extremely complex business logic that cannot be expressed clearly in code.
+- **Reusability**: Create generic, reusable components. If similar code appears in multiple views, extract it to a component.
+- **Composables**: Extract reusable logic into composables. Don't duplicate logic across components.
+
+### Database
+- **ORM**: SQLAlchemy with async support
+- **Migrations**: Alembic for database schema changes
+- **Vector Search**: Use pgvector extension for semantic search
+- **Naming**: Use snake_case for database fields and tables
+- **Relationships**: Proper foreign key constraints and relationships
+
+## Key Features Implementation
+
+### Authentication & Security
+- JWT-based authentication with configurable expiration
+- Token blacklisting for logout functionality
+- Google SSO integration with domain validation
+- Role-based access control (RBAC)
+- Rate limiting on API endpoints
+- Security headers middleware
+- Input validation with Pydantic
+
+### Internationalization
+- Backend: User language preferences stored in database
+- Frontend: Vue I18n with real-time language switching
+- AI Integration: Dynamic language responses based on user preferences
+- Supported languages: English (en), Polish (pl)
+- Default language: Polish (pl)
+
+### Knowledge Management
+- Multi-source knowledge import (websites, documents, files)
+- Vector search using pgvector for semantic similarity
+- Background processing with Celery for knowledge extraction
+- Content validation and quality checks
+- Scheduled updates for knowledge sources
+
+### AI Integration
+- OpenAI GPT models for chat completions
+- Langfuse integration for LLM observability
+- Dynamic language responses
+- Context-aware conversations
+- Vector embeddings for semantic search
+
+## Environment Configuration
+
+### Backend Environment Variables
+```env
+# Core Configuration
+ENVIRONMENT=development|staging|production
+DEBUG=true|false
+SECRET_KEY=your_secret_key
+DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db
+
+# Database
+DB_USER=postgres
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=gaudiai
+
+# Security
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+ENABLE_TOKEN_BLACKLISTING=true
+
+# CORS
+CORS_ADDITIONAL_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Redis/Celery
+REDIS_HOST=redis
+REDIS_PORT=6379
+CELERY_BROKER_URL=redis://redis:6379/0
+
+# Language
+DEFAULT_LANGUAGE=pl
+SUPPORTED_LANGUAGES=en,pl
+
+# Google SSO
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+SSO_ALLOWED_DOMAINS=yourcompany.com
+EMERGENCY_SSO_EMAILS=admin@yourcompany.com
+
+# AI Services
+CHAT_GPT_API_KEY=your_openai_key
+LANGFUSE_PUBLIC_KEY=your_langfuse_key
+LANGFUSE_SECRET_KEY=your_langfuse_secret
+```
+
+### Frontend Environment Variables (VITE_*)
+```env
+VITE_API_URL=http://localhost:8000
+VITE_ALLOW_SSO_LOGIN=true
+VITE_ALLOW_FORM_LOGIN=true
+VITE_DEFAULT_LANG=pl
+VITE_GOOGLE_CLIENT_ID=your_client_id
+```
+
+## Development Workflow
+
+### Database Changes
+1. Create Alembic migration: `alembic revision --autogenerate -m "description"`
+2. Apply migration: `alembic upgrade head`
+3. Check status: `alembic current`
+
+### API Development
+**MANDATORY ORDER** (follow this sequence):
+1. Define Pydantic schemas in `schemas.py` (input/output validation)
+2. Create SQLAlchemy models in `models.py` (database structure)
+3. Implement CRUD operations in `database/{model}/crud.py` (database access only)
+4. Create service class in `services/{model}_service.py` (business logic)
+5. Create API routes in `api/routes/{model}.py` (HTTP endpoints, call services only)
+6. Write tests
+
+**CRITICAL RULES:**
+- Routes **NEVER** call CRUD directly - always use services
+- Services **NEVER** perform direct database operations - always use CRUD
+- CRUD **NEVER** contains business logic - only data access
+- Business logic **ALWAYS** goes in services
+
+### Development Pattern (Route → Service → CRUD)
+When creating new endpoints, **ALWAYS** follow this specific pattern. This is **MANDATORY** and enforces SOLID and DRY principles.
+
+#### 1. **Route Layer** (`api/routes/`): 
+   - **ONLY** define the API endpoint
+   - **ONLY** handle HTTP requests/responses
+   - **ONLY** validate input using Pydantic schemas
+   - **ONLY** call service layer methods
+   - **NEVER** put business logic here
+   - **NEVER** call CRUD directly from routes
+   - **NEVER** perform database operations here
+
+**Example:**
+```python
+@router.post("/users", response_model=StandardResponse[User])
+async def create_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    service = UserService(db)
+    new_user = await service.create_user(user_data)
+    return created_response(data=new_user)
+```
+
+#### 2. **Service Layer** (`services/`):
+   - **ALL business logic** goes here
+   - **ALL validations** beyond input validation
+   - **ALL business rules** and orchestration
+   - Orchestrates multiple CRUD operations
+   - Handles complex operations
+   - **NEVER** perform direct database operations (use CRUD)
+   - **NEVER** handle HTTP concerns (status codes, responses)
+
+**Example:**
+```python
+class UserService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.crud = UserCRUD(db)
+    
+    async def create_user(self, user_data: UserCreate) -> User:
+        if await self.crud.get_by_email(user_data.email):
+            raise ConflictError("User with this email already exists")
+        
+        hashed_password = hash_password(user_data.password)
+        user_dict = user_data.dict()
+        user_dict['password'] = hashed_password
+        
+        return await self.crud.create(user_dict)
+```
+
+#### 3. **CRUD Layer** (`database/{model}/crud.py`):
+   - **ONLY** basic database operations (Create, Read, Update, Delete)
+   - **ONLY** simple, focused database functions
+   - **ONLY** data access operations
+   - **NEVER** contain business logic
+   - **NEVER** contain validations beyond data access
+   - **NEVER** be called directly from routes
+
+**Example:**
+```python
+class UserCRUD:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+    
+    async def create(self, user_data: dict) -> User:
+        new_user = User(**user_data)
+        self.db.add(new_user)
+        await self.db.commit()
+        await self.db.refresh(new_user)
+        return new_user
+    
+    async def get_by_email(self, email: str) -> User | None:
+        result = await self.db.execute(
+            select(User).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
+```
+
+**Mandatory Flow:**
+```
+Route → Service → CRUD
+POST /users → UserService.create_user() → UserCRUD.create()
+```
+
+**❌ WRONG:**
+```python
+# Route with business logic - NEVER DO THIS
+@router.post("/users")
+async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    # Business logic in route - WRONG!
+    if await db.execute(select(User).where(User.email == user_data.email)):
+        raise HTTPException(409, "Email exists")
+    hashed = hash_password(user_data.password)
+    user = User(email=user_data.email, password=hashed)
+    db.add(user)
+    await db.commit()
+    return user
+```
+
+**✅ CORRECT:**
+```python
+# Route - only HTTP concerns
+@router.post("/users", response_model=StandardResponse[User])
+async def create_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    service = UserService(db)
+    new_user = await service.create_user(user_data)
+    return created_response(data=new_user)
+```
+
+### Frontend Development
+1. Create Vue components in `components/`
+2. Use composables for reusable logic
+3. Implement proper i18n support
+4. Add router guards for authentication
+5. Use Axios for API calls with proper error handling
+
+### Background Tasks
+1. Define Celery tasks in `tasks/`
+2. Use Redis as message broker
+3. Implement proper error handling and retries
+4. Monitor task execution
+
+## Testing Guidelines
+
+### Backend Testing
+- Use pytest for unit tests
+- Test API endpoints with proper authentication
+- Test database operations with test database
+- Test Celery tasks
+- Test internationalization features
+
+### Frontend Testing
+- Test Vue components
+- Test composables
+- Test router navigation
+- Test i18n functionality
+- Test API integration
+
+## Deployment
+
+### Docker
+- Use Docker Compose for local development
+- Separate containers for backend, frontend, database, Redis
+- Proper environment variable configuration
+- Health checks for all services
+
+### Production
+- Use Railway for deployment
+- Environment-specific configuration
+- Proper logging and monitoring
+- Database migrations on deployment
+
+## Code Quality
+
+### Clean Code Principles
+
+**MANDATORY**: All code must follow Clean Code principles. Code should be readable, maintainable, and self-explanatory.
+
+#### Self-Explanatory Naming
+- **Methods/Functions**: Names must clearly describe what the function does. If you need a comment to explain what a function does, rename it.
+  - ✅ **GOOD**: `getUserByEmail()`, `calculateTotalPrice()`, `validateUserPermissions()`, `hashPassword()`
+  - ❌ **BAD**: `process()`, `doStuff()`, `handle()`, `data()`, `helper()`
+  
+- **Variables**: Names must clearly indicate what data they contain or represent.
+  - ✅ **GOOD**: `userEmail`, `totalPrice`, `isAuthenticated`, `hasPermission`, `userList`, `currentUserId`
+  - ❌ **BAD**: `data`, `temp`, `x`, `y`, `result`, `obj`, `item`, `stuff`
+  
+- **Boolean Variables**: Use prefixes like `is`, `has`, `can`, `should`, `will` to make boolean intent clear.
+  - ✅ **GOOD**: `isActive`, `hasPermission`, `canEdit`, `shouldValidate`, `willExpire`
+  - ❌ **BAD**: `active`, `permission`, `edit`, `validate`, `expire`
+
+- **Collections/Lists**: Use plural nouns or descriptive suffixes.
+  - ✅ **GOOD**: `users`, `userList`, `activeUsers`, `userIds`
+  - ❌ **BAD**: `user`, `list`, `data`, `items`
+
+- **Constants**: Use descriptive names that explain the value's purpose.
+  - ✅ **GOOD**: `MAX_RETRY_ATTEMPTS`, `DEFAULT_TIMEOUT_SECONDS`, `API_BASE_URL`
+  - ❌ **BAD**: `MAX`, `TIMEOUT`, `URL`, `NUMBER`
+
+#### Method Design
+- **Single Responsibility**: Each method should do ONE thing and do it well.
+- **Small Methods**: Keep methods small and focused. If a method is longer than 20-30 lines, consider breaking it down.
+- **Descriptive Names**: Method names should be verbs that describe the action.
+  - ✅ **GOOD**: `createUser()`, `deleteUserById()`, `updateUserEmail()`, `validateEmailFormat()`
+  - ❌ **BAD**: `user()`, `process()`, `handle()`, `do()`
+
+#### Code Readability
+- **Express Intent**: Code should express business intent, not just implementation details.
+- **Avoid Magic Numbers/Strings**: Use named constants instead of hardcoded values.
+  - ✅ **GOOD**: `if (retryCount < MAX_RETRY_ATTEMPTS)`
+  - ❌ **BAD**: `if (retryCount < 3)`
+- **Use Meaningful Conditions**: Boolean expressions should read like sentences.
+  - ✅ **GOOD**: `if (user.isActive && user.hasPermission)`
+  - ❌ **BAD**: `if (u.a && u.p)`
+
+### General Principles
+- **Self-Describing Code**: Write code that explains itself without comments
+- **Clear Naming**: Use descriptive variable and function names that explain their purpose
+- **NO Comments**: **STRICTLY avoid comments** in both backend and frontend. Write self-describing code instead. Only exception: extremely complex business logic that cannot be expressed clearly in code.
+- **Clean Architecture**: Follow established patterns consistently
+- **DRY Principle**: Never duplicate code. Extract common logic into reusable functions/components/composables
+- **SOLID Principles**: Apply SOLID principles in all code design decisions
+
+### Python (Backend)
+- Follow PEP 8 style guidelines
+- Use type hints for better code clarity
+- Implement proper error handling
+- Use async/await patterns
+- **NO docstrings** unless for public APIs (prefer self-describing code)
+- **Clean Code Naming**:
+  - Functions: `snake_case` with descriptive verbs: `get_user_by_email()`, `validate_user_permissions()`, `calculate_total_price()`
+  - Variables: `snake_case` with clear nouns: `user_email`, `total_price`, `is_authenticated`, `has_permission`
+  - Classes: `PascalCase`: `UserService`, `UserCRUD`, `EmailValidator`
+  - Constants: `UPPER_SNAKE_CASE`: `MAX_RETRY_ATTEMPTS`, `DEFAULT_TIMEOUT_SECONDS`
+  - Boolean variables: Use `is_`, `has_`, `can_`, `should_` prefixes: `is_active`, `has_permission`, `can_edit`
+- **NO comments** - code should be self-explanatory
+- **Method Design**: Keep methods small (20-30 lines max), single responsibility, descriptive names
+- **Separation of Concerns**:
+  - Routes: HTTP only, no business logic
+  - Services: All business logic
+  - CRUD: Database operations only
+
+### JavaScript/Vue (Frontend)
+- Use ESLint for code quality
+- Follow Vue 3 Composition API patterns
+- Use TypeScript when possible
+- Implement proper error handling
+- **NO comments** in components - let code speak for itself
+- **Clean Code Naming**:
+  - Functions/Methods: `camelCase` with descriptive verbs: `getUserByEmail()`, `validateUserPermissions()`, `calculateTotalPrice()`
+  - Variables: `camelCase` with clear nouns: `userEmail`, `totalPrice`, `isAuthenticated`, `hasPermission`
+  - Components: `PascalCase`: `DataTable.vue`, `UserCard.vue`, `FormInput.vue`
+  - Constants: `UPPER_SNAKE_CASE`: `MAX_RETRY_ATTEMPTS`, `API_BASE_URL`
+  - Boolean variables: Use `is`, `has`, `can`, `should` prefixes: `isActive`, `hasPermission`, `canEdit`
+- **Method Design**: Keep methods small (20-30 lines max), single responsibility, descriptive names
+- **Reusability**: Create generic components. If code is duplicated, extract to component/composable
+- **Separation of Concerns**:
+  - Views: UI structure and user interaction
+  - Services: API calls only
+  - Composables: Reusable logic
+  - Components: Reusable UI elements
+
+## Security Considerations
+
+- Always validate input data
+- Use parameterized queries
+- Implement proper authentication
+- Use HTTPS in production
+- Validate CORS origins
+- Implement rate limiting
+- Use secure session management
+- Regular security updates
+
+## Performance Optimization
+
+- Use async/await patterns
+- Implement database connection pooling
+- Use Redis for caching
+- Optimize database queries
+- Implement proper indexing
+- Use vector search efficiently
+- Monitor performance metrics
+
+## Monitoring & Logging
+
+- Use structured logging
+- Implement health check endpoints
+- Monitor API performance
+- Track user interactions
+- Use Langfuse for AI observability
+- Monitor Celery task execution
+
+## Common Patterns
+
+### Backend API Pattern
+
+**✅ CORRECT Pattern (Route → Service → CRUD):**
+
+```python
+# Route Layer (api/routes/user.py)
+@router.post("/users", response_model=StandardResponse[User])
+async def create_user(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    service = UserService(db)
+    new_user = await service.create_user(user_data)
+    return created_response(data=new_user)
+
+# Service Layer (services/user_service.py)
+class UserService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.crud = UserCRUD(db)
+    
+    async def create_user(self, user_data: UserCreate) -> User:
+        existing_user = await self.crud.get_by_email(user_data.email)
+        if existing_user:
+            raise ConflictError("User with this email already exists")
+        
+        hashed_password = hash_password(user_data.password)
+        user_dict = user_data.dict()
+        user_dict['password'] = hashed_password
+        
+        return await self.crud.create(user_dict)
+
+# CRUD Layer (database/user/crud.py)
+class UserCRUD:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+    
+    async def create(self, user_data: dict) -> User:
+        new_user = User(**user_data)
+        self.db.add(new_user)
+        await self.db.commit()
+        await self.db.refresh(new_user)
+        return new_user
+    
+    async def get_by_email(self, email: str) -> User | None:
+        result = await self.db.execute(
+            select(User).where(User.email == email)
+        )
+        return result.scalar_one_or_none()
+```
+
+**❌ WRONG Patterns (NEVER do this):**
+
+```python
+# WRONG: Business logic in route
+@router.post("/users")
+async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    if await db.execute(select(User).where(User.email == user_data.email)):
+        raise HTTPException(409, "Email exists")  # Business logic in route!
+    hashed = hash_password(user_data.password)  # Business logic in route!
+    user = User(email=user_data.email, password=hashed)
+    db.add(user)
+    await db.commit()
+    return user
+
+# WRONG: Route calling CRUD directly
+@router.post("/users")
+async def create_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+    crud = UserCRUD(db)
+    return await crud.create(user_data.dict())  # Missing business logic!
+
+# WRONG: Business logic in CRUD
+class UserCRUD:
+    async def create(self, user_data: dict) -> User:
+        if await self.db.execute(select(User).where(User.email == user_data['email'])):
+            raise ValueError("Email exists")  # Business logic in CRUD!
+        hashed = hash_password(user_data['password'])  # Business logic in CRUD!
+        user_data['password'] = hashed
+        # ...
+```
+
+### Frontend Component Pattern
+
+**✅ CORRECT Pattern (View → Service → API):**
+
+```vue
+<!-- View Layer (views/UsersView.vue) -->
+<template>
+  <div class="container">
+    <DataTable
+      :columns="columns"
+      :data="users"
+      :loading="loading"
+      :actions="actions"
+      @action="handleAction"
+    />
+  </div>
+</template>
+
+<script>
+import DataTable from '../components/ui/DataTable.vue'
+import { showToast } from '../components/ui/Toast.vue'
+import * as userService from '../services/userService.js'
+import { extractErrorMessage } from '../utils/api/responseHandler.js'
+
+export default {
+  components: { DataTable },
+  data() {
+    return {
+      users: [],
+      loading: false,
+      columns: [
+        { key: 'username', label: this.$t('form.username'), sortable: true },
+        { key: 'email', label: this.$t('form.email'), sortable: true }
+      ],
+      actions: [
+        { key: 'edit', type: 'edit', icon: 'bi bi-pencil', title: this.$t('tooltip.edit') },
+        { key: 'delete', type: 'delete', icon: 'bi bi-trash', title: this.$t('tooltip.delete') }
+      ]
+    }
+  },
+  async mounted() {
+    await this.fetchUsers()
+  },
+  methods: {
+    async fetchUsers() {
+      this.loading = true
+      try {
+        this.users = await userService.getAllUsers()
+      } catch (error) {
+        showToast(extractErrorMessage(error), 'error')
+      } finally {
+        this.loading = false
+      }
+    },
+    handleAction({ type, row }) {
+      if (type === 'edit') {
+        this.editUser(row)
+      } else if (type === 'delete') {
+        this.deleteUser(row.id)
+      }
+    },
+    async deleteUser(id) {
+      if (!confirm(this.$t('modal.confirm_delete'))) return
+      try {
+        await userService.deleteUser(id)
+        showToast(this.$t('success.deleted'), 'success')
+        await this.fetchUsers()
+      } catch (error) {
+        showToast(extractErrorMessage(error), 'error')
+      }
+    }
+  }
+}
+</script>
+```
+
+**Service Layer (services/userService.js):**
+```javascript
+import apiClient from '../utils/api/client.js'
+import { API_ENDPOINTS } from '../config/api.js'
+import { extractData } from '../utils/api/responseHandler.js'
+
+export const getAllUsers = async () => {
+  const response = await apiClient.get(API_ENDPOINTS.USERS_ALL)
+  return extractData(response)
+}
+
+export const deleteUser = async (id) => {
+  const response = await apiClient.delete(API_ENDPOINTS.USER_BY_ID(id))
+  return extractData(response)
+}
+```
+
+**❌ WRONG Patterns (NEVER do this):**
+
+```vue
+<!-- WRONG: Direct API calls in view -->
+<script>
+import apiClient from '../utils/api/client.js'
+
+export default {
+  methods: {
+    async fetchUsers() {
+      const response = await apiClient.get('/user/all')  // Direct API call!
+      this.users = response.data.data
+    }
+  }
+}
+</script>
+
+<!-- WRONG: Business logic in view -->
+<script>
+export default {
+  methods: {
+    async deleteUser(id) {
+      const users = this.users.filter(u => u.id !== id)  // Business logic in view!
+      this.users = users
+    }
+  }
+}
+</script>
+```
+
+### Database Model Pattern
+```python
+class Model(Base):
+    __tablename__ = "table_name"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # Other fields
+    
+    # Relationships
+    related_items = relationship("RelatedModel", back_populates="model")
+```
+
+## File Naming Conventions
+
+### Backend
+- Files: `snake_case.py`
+- Classes: `PascalCase`
+- Functions/Variables: `snake_case`
+- Constants: `UPPER_SNAKE_CASE`
+
+### Frontend
+- Files: `PascalCase.vue` (components), `camelCase.js` (utilities)
+- Components: `PascalCase`
+- Functions/Variables: `camelCase`
+- Constants: `UPPER_SNAKE_CASE`
+
+## Git Workflow
+- Use feature branches for development
+- Follow conventional commit messages
+- Create pull requests for code review
+- Use proper branch naming: `feature/description`, `bugfix/description`, `hotfix/description`
+
+## Documentation
+- Keep README.md updated
+- Document API endpoints
+- **NO inline code documentation** - code should be self-describing
+- Maintain architecture documentation (markdown files)
+- Document environment setup
+- Use clear naming instead of comments
+
+## Error Handling
+- Use structured error responses
+- Implement proper HTTP status codes
+- Log errors with context
+- Provide user-friendly error messages
+- Implement proper fallbacks
+
+## Internationalization Best Practices
+- Always use i18n keys in templates
+- Provide translations for all user-facing text
+- Test language switching functionality
+- Use proper pluralization rules
+- Maintain translation consistency
+
+## Critical Rules Summary
+
+### ⚠️ MANDATORY Rules (Never Violate)
+
+1. **Clean Code Principles**: 
+   - Methods and variables must be self-explanatory
+   - Use descriptive names that clearly express intent
+   - If you need a comment to explain what something does, rename it
+   - Keep methods small and focused (single responsibility)
+
+2. **NO Comments**: Strictly avoid comments in backend and frontend. Write self-describing code with clear naming.
+
+3. **Route → Service → CRUD Pattern**:
+   - Routes: **ONLY** HTTP concerns, **NEVER** business logic, **NEVER** direct CRUD calls
+   - Services: **ALL** business logic, **NEVER** direct database operations
+   - CRUD: **ONLY** database operations, **NEVER** business logic
+
+4. **DRY Principle**: Never duplicate code. Extract to components/composables/services.
+
+5. **SOLID Principles**: Apply in all design decisions.
+
+6. **Separation of Concerns**: Each layer has one responsibility.
+
+### ✅ Always Do:
+- Write self-describing code with Clean Code principles
+- Use clear, descriptive names for methods and variables (self-explanatory)
+- Follow naming conventions (snake_case for Python, camelCase for JavaScript)
+- Use meaningful boolean variable names with prefixes (is, has, can, should)
+- Keep methods small and focused (single responsibility)
+- Put business logic in services
+- Use CRUD for database operations only
+- Create reusable components
+- Extract common logic to composables
+- Express intent clearly in code, not in comments
+
+### ❌ Never Do:
+- Put business logic in routes
+- Call CRUD directly from routes
+- Put business logic in CRUD
+- Duplicate code
+- Add comments (unless absolutely necessary)
+- Mix concerns between layers
+
+Remember: This is a production-ready application with enterprise features. Always consider security, performance, and maintainability in your implementations. Follow Clean Code, SOLID, and DRY principles religiously. Code should be self-explanatory - if you need to explain it with comments, refactor it to be clearer.
